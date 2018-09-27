@@ -2,6 +2,7 @@
 
 from os import stat
 import sys
+from numpy.random import randint
 
 #interpret a little endian number from the byte array
 def read_little_endian(start=0, stop=0):
@@ -144,13 +145,13 @@ elif (not (channels == num_channels)):
 ###
 #print("INFO: Lowering audio by one octave... ")
 #f = open("output/" + sys.argv[1][sys.argv[1].index("input/") + 6:sys.argv[1].index(".wav")] + "_lowered.wav", "wb")
-print("INFO: Raising audio by one octave... ")
-f = open("output/" + sys.argv[1][sys.argv[1].index("input/") + 6:sys.argv[1].index(".wav")] + "_raised.wav", "wb")
+#print("INFO: Raising audio by one octave... ")
+f = open("output/" + sys.argv[1][sys.argv[1].index("input/") + 6:sys.argv[1].index(".wav")] + "_noised.wav", "wb")
 #RIFF chunk descriptor
 for c in chunk_id:
     f.write(c.encode())
 #write_little_endian(file=f, value=int(36 + (2 * subchunk_2_size)), bits_per_sample=32, start=4, stop=8)
-write_little_endian(file=f, value=int(36 + (subchunk_2_size / 2)), bits_per_sample=32, start=4, stop=8)
+write_little_endian(file=f, value=int(36 + (subchunk_2_size)), bits_per_sample=32, start=4, stop=8)
 for c in format_val:
     f.write(c.encode())
 
@@ -169,14 +170,28 @@ write_little_endian(file=f, value=bits_per_sample, bits_per_sample=16, start=34,
 for c in subchunk_2_id:
     f.write(c.encode())
 #write_little_endian(file=f, value=int(2 * subchunk_2_size), bits_per_sample=32, start=40, stop=44)
-write_little_endian(file=f, value=int(subchunk_2_size / 2), bits_per_sample=32, start=40, stop=44)
+write_little_endian(file=f, value=int(subchunk_2_size), bits_per_sample=32, start=40, stop=44)
 bool_help = True
 for s in range(0, samples):
 #for s in range(0, 100):
-    if (bool_help):
-        for c in range(0, channels):
-            write_little_endian(file=f, value=data[c][s], bits_per_sample=bits_per_sample)
-    bool_help = not bool_help
+    # if (bool_help):
+    for c in range(0, channels):
+        temp = data[c][s]
+
+        #random noise everything
+        # temp = int(data[c][s] + randint(-10000, 10000))
+        # if (temp > (2**bits_per_sample) - 1):
+        #     temp = (2**bits_per_sample) - 1
+        # elif (temp < 0):
+        #     temp = 0
+
+        #random noise sometimes
+        # temp = data[c][s]
+        # if (randint(0, 1000) < 1):
+        #     temp = randint(0, (2**bits_per_sample) - 1)
+        
+        write_little_endian(file=f, value=temp, bits_per_sample=bits_per_sample)
+    # bool_help = not bool_help
     # for c in range(0, channels):
     #     write_little_endian(file=f, value=data[c][s], bits_per_sample=bits_per_sample)
 
