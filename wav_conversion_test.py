@@ -3,6 +3,12 @@
 from os import stat
 import sys
 from numpy.random import randint
+from numpy import array
+import matplotlib.pyplot as pyplot
+from imageio import imwrite
+from sklearn.feature_extraction.image import extract_patches_2d
+from numpy import mean
+from sklearn.decomposition import MiniBatchDictionaryLearning
 
 #interpret a little endian number from the byte array
 def read_little_endian(start=0, stop=0):
@@ -137,6 +143,37 @@ if (not (samples == num_samples)):
 elif (not (channels == num_channels)):
     print("ERROR: Channel count mismatch. Ending... ")
     exit(1)
+
+
+
+###
+#Creating an image
+###
+# print(data[0][100000:100100])
+# image_list = []
+# for i in range(0, 1):
+#     image_list.append(data[0][100000:100100])
+# #for i in range(0, 1):
+# #    image_list.append(data[1][100000:100100])
+# #image = array([data[0][100000:101000], data[1][100000:101000]])
+# image = array(image_list)
+# print(image.shape)
+
+# # grayscale = ((255 * image) / (2.0**bits_per_sample)).astype("uint8")
+# # imwrite("output/" + sys.argv[1][sys.argv[1].index("input/") + 6:sys.argv[1].index(".wav")] + "_image.png", grayscale)
+# # pyplot.imshow(grayscale, cmap=pyplot.cm.gray_r)
+# # pyplot.xticks()
+# # pyplot.yticks(())
+# # pyplot.show()
+
+# quantum = image / (2.0**bits_per_sample)
+# patch_size = (1, 7)
+# patches = extract_patches_2d(quantum, patch_size)
+# dictionary = MiniBatchDictionaryLearning(n_components=100, alpha=1, n_iter=500)
+# V = dictionary.fit(patches).components_
+# exit(0)
+
+
 
 
 
