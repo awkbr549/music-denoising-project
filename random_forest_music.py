@@ -36,27 +36,41 @@ print("Done.")
 # playsound(output_file_name_white)
 # print("Done.")
 
-X = numpy.empty((0, 1))
+print("Training forest... ", end="")
+sys.stdout.flush()
+X = numpy.empty((0, 5))
 y = numpy.empty(0)
-for t in range(1000, 1100):
-    X = numpy.concatenate((X, numpy.asarray([[clean_data[t][0]]])))
-    y = numpy.concatenate((y, numpy.asarray([clean_data[t+1][0]])))
+for t in range(2000, 2100):
+    #X = numpy.concatenate((X, numpy.asarray([[clean_data[t][0], clean_data[t+1][0], clean_data[t+2][0], clean_data[t+3][0], clean_data[t+4][0]]])))
+    X = numpy.concatenate((X, numpy.asarray([[distorted[t][0], distorted[t+1][0], distorted[t+2][0], distorted[t+3][0], distorted[t+4][0]]])))
+    #X = numpy.concatenate((X, numpy.asarray([[distorted[t][1], distorted[t+1][1], distorted[t+2][1], distorted[t+3][1], distorted[t+4][1]]])))
+    y = numpy.concatenate((y, numpy.asarray([clean_data[t+5][0]])))
+    #y = numpy.concatenate((y, numpy.asarray([clean_data[t+5][1]])))
+    #y = numpy.concatenate((y, numpy.asarray([distorted[t+5][0]])))
 
-# patch_size = (100, 2)
-# patches = extract_patches_2d(clean_data, patch_size)
-# print(patches.shape)
-# #print(patches[0].shape)
+regr = RandomForestRegressor(max_depth=7, random_state=1, n_estimators=100)
+regr.fit(X, y)
+# print(regr.feature_importances_)
+print("Done.")
 
-# X = numpy.empty((0, 1))
-# y = numpy.empty(0)
-# for t in range(1000, 1000 + patch_size[0]):
-#     X = numpy.concatenate((X, numpy.asarray([[t]])))
-#     y = numpy.concatenate((y, numpy.asarray([patches[t][0][0]])))
+# print("Attempting to remove white noise from data... ", end="")
+# sys.stdout.flush()
+# restored = numpy.empty((height, width))
 
-regr = RandomForestRegressor(max_depth=8, random_state=2, n_estimators=100).fit(X, y)
+temp_avg = 0
+temp_sse = 0
+# X = clean, y = clean, predict(clean)
+# X = clean, y = clean, predict(distorted)
+# X = distorted, y = clean, predict(distorted)
+# X = distorted, y = distorted, predict(distorted)
+for t in range(2000, 2100):    
+    #diff = clean_data[t+5][0] - regr.predict([[clean_data[t][0], clean_data[t+1][0], clean_data[t+2][0], clean_data[t+3][0], clean_data[t+4][0]]])[0]
+    diff = clean_data[t+5][0] - regr.predict([[distorted[t][0], distorted[t+1][0], distorted[t+2][0], distorted[t+3][0], distorted[t+4][0]]])[0]
+    #print("Difference: " + str(diff))
+    temp_avg += diff
+    temp_sse += (diff**2)
 
-for t in range(1000, 1100):
-    print()
-    print(clean_data[t+1][0])
-    print(y[t - 1000])
-    print(regr.predict([[clean_data[t][0]]])[0])
+print()
+temp_avg /= 100
+print("Average difference: " + str(temp_avg))
+print("SSE: " + str(temp_sse))
