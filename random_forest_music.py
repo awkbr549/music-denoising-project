@@ -4,7 +4,7 @@ import sys
 from playsound import playsound
 import soundfile
 import numpy
-from sklearn.feature_extraction.image import extract_patches_2d
+#from sklearn.feature_extraction.image import extract_patches_2d
 
 from sklearn.ensemble import RandomForestRegressor
 
@@ -45,7 +45,7 @@ for t in range(2000, 2100):
     X = numpy.concatenate((X, numpy.asarray([[distorted[t][0], distorted[t+1][0], distorted[t+2][0], distorted[t+3][0], distorted[t+4][0]]])))
     #X = numpy.concatenate((X, numpy.asarray([[distorted[t][1], distorted[t+1][1], distorted[t+2][1], distorted[t+3][1], distorted[t+4][1]]])))
     y = numpy.concatenate((y, numpy.asarray([clean_data[t+5][0]])))
-    #y = numpy.concatenate((y, numpy.asarray([clean_data[t+5][1]])))
+    #y = numpy.concatenate((y, numpy.asarray([distorted[t+5][1]])))
     #y = numpy.concatenate((y, numpy.asarray([distorted[t+5][0]])))
 
 regr = RandomForestRegressor(max_depth=7, random_state=1, n_estimators=100)
@@ -55,7 +55,7 @@ print("Done.")
 
 # print("Attempting to remove white noise from data... ", end="")
 # sys.stdout.flush()
-# restored = numpy.empty((height, width))
+restored = numpy.empty((height, width))
 
 temp_avg = 0
 temp_sse = 0
