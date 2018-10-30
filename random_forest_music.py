@@ -4,6 +4,7 @@ import sys
 from playsound import playsound
 import soundfile
 import numpy
+from sklearn.externals import joblib
 #from sklearn.feature_extraction.image import extract_patches_2d
 
 from sklearn.ensemble import RandomForestRegressor
@@ -58,7 +59,7 @@ print("Done.")
 # print("Done.")
 
 
-print("Training forests... ", end="")
+print("Training forests and reconstructing audio... ")#, end="")
 sys.stdout.flush()
 restored_array = [
     numpy.empty((height, width)), #clean input, clean output, left window
@@ -72,15 +73,37 @@ restored_array = [
     numpy.empty((height, width)) #distorted input, distorted output, right window
     ]
 
-restored_left = numpy.empty((height, width))
-restored_center = numpy.empty((height, width))
-restored_right = numpy.empty((height, width))
+# restored_left = numpy.empty((height, width))
+# restored_center = numpy.empty((height, width))
+# restored_right = numpy.empty((height, width))
 
+MAX_DEPTH = 7
+RANDOM_STATE = 1
+N_ESTIMATORS = 100
 
 for c in range(width):
-    MAX_DEPTH = 7
-    RANDOM_STATE = 1
-    N_ESTIMATORS = 100
+
+    #####
+    #TESTING PURPOSES ONLY
+    #####
+    #c = 1
+
+
+
+
+
+    # random_forest_array = [
+    #     None, #clean input, clean output, left window
+    #     None, #clean input, clean output, center window
+    #     None, #clean input, clean output, right window
+    #     None, #distorted input, clean output, left window
+    #     None, #distorted input, clean output, center window
+    #     None, #distorted input, clean output, right window
+    #     None, #distorted input, distorted output, left window
+    #     None, #distorted input, distorted output, center window
+    #     None #distorted input, distorted output, right window
+    #     ]
+
     random_forest_array = [
         RandomForestRegressor(max_depth=MAX_DEPTH, random_state=RANDOM_STATE, n_estimators=N_ESTIMATORS), #clean input, clean output, left window
         RandomForestRegressor(max_depth=MAX_DEPTH, random_state=RANDOM_STATE, n_estimators=N_ESTIMATORS), #clean input, clean output, center window
@@ -92,14 +115,33 @@ for c in range(width):
         RandomForestRegressor(max_depth=MAX_DEPTH, random_state=RANDOM_STATE, n_estimators=N_ESTIMATORS), #distorted input, distorted output, center window
         RandomForestRegressor(max_depth=MAX_DEPTH, random_state=RANDOM_STATE, n_estimators=N_ESTIMATORS) #distorted input, distorted output, right window
         ]
+    random_forest_array_trained = [
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        ]
+
+    for i in range(len(random_forest_array)):
+        try:
+            random_forest_array[i] = joblib.load("output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[i][7:output_file_name_restored[i].find(".wav")] + ".rf")
+            random_forest_array_trained[i] = True
+        except (FileNotFoundError):
+            pass
+            #random_forest_array[i] = RandomForestRegressor(max_depth=MAX_DEPTH, random_state=RANDOM_STATE, n_estimators=N_ESTIMATORS)
 
     X_array = [
-        numpy.empty((0, 5)), #clean input, left window
-        numpy.empty((0, 5)), #clean input, center window
-        numpy.empty((0, 5)), #clean input, right window
-        numpy.empty((0, 5)), #distorted input, left window
-        numpy.empty((0, 5)), #distorted input, center window
-        numpy.empty((0, 5)) #distorted input, right window
+        numpy.empty((0, window_size)), #clean input, left window
+        numpy.empty((0, window_size)), #clean input, center window
+        numpy.empty((0, window_size)), #clean input, right window
+        numpy.empty((0, window_size)), #distorted input, left window
+        numpy.empty((0, window_size)), #distorted input, center window
+        numpy.empty((0, window_size)) #distorted input, right window
         ]
     y_array = [
         numpy.empty(0), #clean output, left window
@@ -127,23 +169,27 @@ for c in range(width):
         [] #distorted output, right window
         ]
 
+    print("\tExtracting training data for channel " + str(c) + "... ", end="")
+    sys.stdout.flush()
     for t in range(height - window_size):
+        for X_list in X_list_array:
+            X_list.append([])
         for i in range(window_size):
             #training on clean input
-            X_list_array[0].append(clean_data[t+i][c]) #clean input, left window
+            X_list_array[0][t].append(clean_data[t+i][c]) #clean input, left window
             if (i < window_size / 2):
-                X_list_array[1].append(clean_data[t+i][c]) #clean input, center window
+                X_list_array[1][t].append(clean_data[t+i][c]) #clean input, center window
             else:
-                X_list_array[1].append(clean_data[t+i+1][c]) #clean input, center window
-            X_list_array[2].append(clean_data[t+i+1][c]) #clean input, right window
+                X_list_array[1][t].append(clean_data[t+i+1][c]) #clean input, center window
+            X_list_array[2][t].append(clean_data[t+i+1][c]) #clean input, right window
 
             #training on distorted input
-            X_list_array[3].append(distorted[t+i][c]) #distorted input, left window
+            X_list_array[3][t].append(distorted[t+i][c]) #distorted input, left window
             if (i < window_size / 2):
-                X_list_array[4].append(distorted[t+i][c]) #distorted input, center window
+                X_list_array[4][t].append(distorted[t+i][c]) #distorted input, center window
             else:
-                X_list_array[4].append(distorted[t+i+1][c]) #distorted input, center window
-            X_list_array[5].append(distorted[t+i+1][c]) #distorted input, right window
+                X_list_array[4][t].append(distorted[t+i+1][c]) #distorted input, center window
+            X_list_array[5][t].append(distorted[t+i+1][c]) #distorted input, right window
 
         #training on clean output
         y_list_array[0].append((clean_data[t+window_size][c])) #clean output, left window
@@ -156,12 +202,12 @@ for c in range(width):
         y_list_array[5].append((distorted[t][c])) #distorted output, right window
 
 
-    X_array[0] = numpy.concatenate((X_array[0], numpy.asarray([X_list_array[0]]))) #clean input, left window
-    X_array[1] = numpy.concatenate((X_array[1], numpy.asarray([X_list_array[1]]))) #clean input, center window
-    X_array[2] = numpy.concatenate((X_array[2], numpy.asarray([X_list_array[2]]))) #clean input, right window
-    X_array[3] = numpy.concatenate((X_array[3], numpy.asarray([X_list_array[3]]))) #distorted input, left window
-    X_array[4] = numpy.concatenate((X_array[4], numpy.asarray([X_list_array[4]]))) #distorted input, center window
-    X_array[5] = numpy.concatenate((X_array[5], numpy.asarray([X_list_array[5]]))) #distorted input, right window
+    X_array[0] = numpy.concatenate((X_array[0], numpy.asarray(X_list_array[0]))) #clean input, left window
+    X_array[1] = numpy.concatenate((X_array[1], numpy.asarray(X_list_array[1]))) #clean input, center window
+    X_array[2] = numpy.concatenate((X_array[2], numpy.asarray(X_list_array[2]))) #clean input, right window
+    X_array[3] = numpy.concatenate((X_array[3], numpy.asarray(X_list_array[3]))) #distorted input, left window
+    X_array[4] = numpy.concatenate((X_array[4], numpy.asarray(X_list_array[4]))) #distorted input, center window
+    X_array[5] = numpy.concatenate((X_array[5], numpy.asarray(X_list_array[5]))) #distorted input, right window
 
     y_array[0] = numpy.concatenate((y_array[0], numpy.asarray(y_list_array[0]))) #clean output, left window
     y_array[1] = numpy.concatenate((y_array[1], numpy.asarray(y_list_array[1]))) #clean output, center window
@@ -169,47 +215,135 @@ for c in range(width):
     y_array[3] = numpy.concatenate((y_array[3], numpy.asarray(y_list_array[3]))) #distorted output, left window
     y_array[4] = numpy.concatenate((y_array[4], numpy.asarray(y_list_array[4]))) #distorted output, center window
     y_array[5] = numpy.concatenate((y_array[5], numpy.asarray(y_list_array[5]))) #distorted output, right window
+    print("\tDone.")
 
-    random_forest_array[0].fit(X_array[0], y_array[0]) #clean input, clean output, left window
-    random_forest_array[1].fit(X_array[1], y_array[1]) #clean input, clean output, center window
-    random_forest_array[2].fit(X_array[2], y_array[2]) #clean input, clean output, right window
-    random_forest_array[3].fit(X_array[3], y_array[0]) #distorted input, clean output, left window
-    random_forest_array[4].fit(X_array[4], y_array[1]) #distorted input, clean output, center window
-    random_forest_array[5].fit(X_array[5], y_array[2]) #distorted input, clean output, right window
-    random_forest_array[6].fit(X_array[3], y_array[3]) #distorted input, distorted output, left window
-    random_forest_array[7].fit(X_array[4], y_array[4]) #distorted input, distorted output, center window,
-    random_forest_array[8].fit(X_array[5], y_array[5]) #distorted input, distorted output, right window
+    print("\tTraining forests for channel " + str(c) + "... ")#, end="")
+    sys.stdout.flush()
+    # if (not random_forest_array_trained[0]):
+    #     random_forest_array[0].fit(X_array[0], y_array[0]) #clean input, clean output, left window
+    #     joblib.dump(random_forest_array[0], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[0][7:output_file_name_restored[i].find(".wav")] + ".rf")
+    # print("\t\tTrained forest 0.")
+    # sys.stdout.flush()
 
-    for t in range(window_size, height - window_size):
-        for i in range(window_size):
-            #training on clean input
-            X_list_array[0].append(clean_data[t+i][c]) #clean input, left window
-            if (i < window_size / 2):
-                X_list_array[1].append(clean_data[t+i][c]) #clean input, center window
-            else:
-                X_list_array[1].append(clean_data[t+i+1][c]) #clean input, center window
-            X_list_array[2].append(clean_data[t+i+1][c]) #clean input, right window
+    # if (not random_forest_array_trained[1]):
+    #     random_forest_array[1].fit(X_array[1], y_array[1]) #clean input, clean output, center window
+    #     joblib.dump(random_forest_array[1], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[1][7:output_file_name_restored[i].find(".wav")] + ".rf")
+    # print("\t\tTrained forest 1.")
+    # sys.stdout.flush()
 
-            #training on distorted input
-            X_list_array[3].append(distorted[t+i][c]) #distorted input, left window
-            if (i < window_size / 2):
-                X_list_array[4].append(distorted[t+i][c]) #distorted input, center window
-            else:
-                X_list_array[4].append(distorted[t+i+1][c]) #distorted input, center window
-            X_list_array[5].append(distorted[t+i+1][c]) #distorted input, right window
+    # if (not random_forest_array_trained[2]):
+    #     random_forest_array[2].fit(X_array[2], y_array[2]) #clean input, clean output, right window
+    #     joblib.dump(random_forest_array[2], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[2][7:output_file_name_restored[i].find(".wav")] + ".rf")
+    # print("\t\tTrained forest 2.")
+    # sys.stdout.flush()
 
-        restored_array[0][t+window_size][c] = random_forest_array[0].predict(numpy.asarray([X_list_array[0]])) #clean input, clean output, left window
-        restored_array[1][t+int(window_size/2)][c] = random_forest_array[1].predict(numpy.asarray([X_list_array[1]])) #clean input, clean output, center window
-        restored_array[2][t][c] = random_forest_array[2].predict(numpy.asarray([X_list_array[2]])) #clean input, clean output, right window
-        restored_array[3][t+window_size][c] = random_forest_array[3].predict(numpy.asarray([X_list_array[3]])) #distorted input, clean output, left window
-        restored_array[4][t+int(window_size/2)][c] = random_forest_array[4].predict(numpy.asarray([X_list_array[4]])) #distorted input, clean output, center window
-        restored_array[5][t][c] = random_forest_array[5].predict(numpy.asarray([X_list_array[5]])) #distorted input, clean output, right window
-        restored_array[6][t+window_size][c] = random_forest_array[6].predict(numpy.asarray([X_list_array[3]])) #distorted input, distorted output, left window
-        restored_array[7][t+int(window_size/2)][c] = random_forest_array[7].predict(numpy.asarray([X_list_array[4]])) #distorted input, distorted output, center window
-        restored_array[8][t][c] = random_forest_array[8].predict(numpy.asarray([X_list_array[5]])) #distorted input, distorted output, right window
+    # if (not random_forest_array_trained[3]):
+    #     random_forest_array[3].fit(X_array[3], y_array[0]) #distorted input, clean output, left window
+    #     joblib.dump(random_forest_array[3], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[3][7:output_file_name_restored[i].find(".wav")] + ".rf")
+    # print("\t\tTrained forest 3.")
+    # sys.stdout.flush()
 
-for i in range(len(output_file_name_restored)):
+    # if (not random_forest_array_trained[4]):
+    #     random_forest_array[4].fit(X_array[4], y_array[1]) #distorted input, clean output, center window
+    #     joblib.dump(random_forest_array[4], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[i][7:output_file_name_restored[4].find(".wav")] + ".rf")
+    # print("\t\tTrained forest 4.")
+    # sys.stdout.flush()
+
+    # if (not random_forest_array_trained[5]):
+    #     random_forest_array[5].fit(X_array[5], y_array[2]) #distorted input, clean output, right window
+    #     joblib.dump(random_forest_array[5], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[5][7:output_file_name_restored[i].find(".wav")] + ".rf")
+    # print("\t\tTrained forest 5.")
+    # sys.stdout.flush()
+
+    # if (not random_forest_array_trained[6]):
+    #     random_forest_array[6].fit(X_array[3], y_array[3]) #distorted input, distorted output, left window
+    #     joblib.dump(random_forest_array[6], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[6][7:output_file_name_restored[i].find(".wav")] + ".rf")
+    # print("\t\tTrained forest 6.")
+    # sys.stdout.flush()
+
+    # if (not random_forest_array_trained[7]):
+    #     random_forest_array[7].fit(X_array[4], y_array[4]) #distorted input, distorted output, center window
+    #     joblib.dump(random_forest_array[7], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[7][7:output_file_name_restored[i].find(".wav")] + ".rf")
+    # print("\t\tTrained forest 7.")
+    # sys.stdout.flush()
+
+    if (not random_forest_array_trained[8]):
+        random_forest_array[8].fit(X_array[5], y_array[5]) #distorted input, distorted output, right window
+        joblib.dump(random_forest_array[8], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[8][7:output_file_name_restored[i].find(".wav")] + ".rf")
+    print("\t\tTrained forest 8.")
+    sys.stdout.flush()
+
+    # print("\tDone.")
+
+    print("\tReconstructing audio for channel " + str(c) + "... ", end="")
+    print("\n|0\t|10\t|20\t|30\t|40\t|50\t|60\t|70\t|80\t|90\t|100\t")
+    sys.stdout.flush()
+    MAX = height - window_size
+    DIVISOR = int(MAX / 80)
+    for t in range(window_size, MAX):
+        # for i in range(window_size):
+        #     #training on clean input
+        #     X_list_array[0].append(clean_data[t+i][c]) #clean input, left window
+        #     if (i < window_size / 2):
+        #         X_list_array[1].append(clean_data[t+i][c]) #clean input, center window
+        #     else:
+        #         X_list_array[1].append(clean_data[t+i+1][c]) #clean input, center window
+        #     X_list_array[2].append(clean_data[t+i+1][c]) #clean input, right window
+
+        #     #training on distorted input
+        #     X_list_array[3].append(distorted[t+i][c]) #distorted input, left window
+        #     if (i < window_size / 2):
+        #         X_list_array[4].append(distorted[t+i][c]) #distorted input, center window
+        #     else:
+        #         X_list_array[4].append(distorted[t+i+1][c]) #distorted input, center window
+        #     X_list_array[5].append(distorted[t+i+1][c]) #distorted input, right window
+        
+        #this is just part of the loading bar
+        if (t % DIVISOR == 0):
+            print("|", end="")
+            sys.stdout.flush()
+
+        # restored_array[0][t+window_size][c] = random_forest_array[0].predict(numpy.asarray([X_list_array[0][t]])) #clean input, clean output, left window
+        # restored_array[1][t+int(window_size/2)][c] = random_forest_array[1].predict(numpy.asarray([X_list_array[1][t]])) #clean input, clean output, center window
+        # restored_array[2][t][c] = random_forest_array[2].predict(numpy.asarray([X_list_array[2][t]])) #clean input, clean output, right window
+        # restored_array[3][t+window_size][c] = random_forest_array[3].predict(numpy.asarray([X_list_array[3][t]])) #distorted input, clean output, left window
+        # restored_array[4][t+int(window_size/2)][c] = random_forest_array[4].predict(numpy.asarray([X_list_array[4][t]])) #distorted input, clean output, center window
+        # restored_array[5][t][c] = random_forest_array[5].predict(numpy.asarray([X_list_array[5][t]])) #distorted input, clean output, right window
+        # restored_array[6][t+window_size][c] = random_forest_array[6].predict(numpy.asarray([X_list_array[3][t]])) #distorted input, distorted output, left window
+        # restored_array[7][t+int(window_size/2)][c] = random_forest_array[7].predict(numpy.asarray([X_list_array[4][t]])) #distorted input, distorted output, center window
+        restored_array[8][t][c] = random_forest_array[8].predict(numpy.asarray([X_list_array[5][t]])) #distorted input, distorted output, right window
+    
+    #this is just part of the loading bar
+    print("|", end="")
+    print("\tDone.")
+
+
+
+
+    #####
+    #TESTING PURPOSES ONLY
+    #####
+    #break
+
+
+
+
+print("Done.")
+
+print("Saving reconstructed audio to files... ", end="")
+sys.stdout.flush()
+for i in range(8, len(output_file_name_restored)):
     soundfile.write(output_file_name_restored[i], restored_array[i], sample_rate)
+    
+    #####
+    #TESTING PURPOSES ONLY
+    #####
+    break
+
+
+
+
+
 # soundfile.write(output_file_name_restored[0], restored_array[0], sample_rate)
 # soundfile.write(output_file_name_restored[1], restored_array[1], sample_rate)
 # soundfile.write(output_file_name_restored[2], restored_array[2], sample_rate)
@@ -221,11 +355,11 @@ for i in range(len(output_file_name_restored)):
 # soundfile.write(output_file_name_restored[8], restored_array[8], sample_rate)
 print("Done.")
 
-print("Playing all restorations... ", end="")
-sys.stdout.flush()
-for name in output_file_name_restored:
-    playsound(name)
-print("Done.")
+# print("Playing all restorations... ", end="")
+# sys.stdout.flush()
+# for name in output_file_name_restored:
+#     playsound(name)
+# print("Done.")
 
 # X = numpy.empty((0, 5))
 # y = numpy.empty(0)
