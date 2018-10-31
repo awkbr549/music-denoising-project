@@ -217,8 +217,8 @@ for c in range(width):
     y_array[5] = numpy.concatenate((y_array[5], numpy.asarray(y_list_array[5]))) #distorted output, right window
     print("\tDone.")
 
-    print("\tTraining forests for channel " + str(c) + "... ")#, end="")
-    sys.stdout.flush()
+    # print("\tTraining forests for channel " + str(c) + "... ")#, end="")
+    # sys.stdout.flush()
     # if (not random_forest_array_trained[0]):
     #     random_forest_array[0].fit(X_array[0], y_array[0]) #clean input, clean output, left window
     #     joblib.dump(random_forest_array[0], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[0][7:output_file_name_restored[i].find(".wav")] + ".rf")
@@ -245,7 +245,7 @@ for c in range(width):
 
     # if (not random_forest_array_trained[4]):
     #     random_forest_array[4].fit(X_array[4], y_array[1]) #distorted input, clean output, center window
-    #     joblib.dump(random_forest_array[4], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[i][7:output_file_name_restored[4].find(".wav")] + ".rf")
+    #     joblib.dump(random_forest_array[4], "output/forest_c_" + str(c) + "_md_" + str(MAX_DEPTH) + "_rs_" + str(RANDOM_STATE) + "_ne_" + str(N_ESTIMATORS) + "_" + output_file_name_restored[4][7:output_file_name_restored[4].find(".wav")] + ".rf")
     # print("\t\tTrained forest 4.")
     # sys.stdout.flush()
 
@@ -334,7 +334,10 @@ print("Saving reconstructed audio to files... ", end="")
 sys.stdout.flush()
 for i in range(8, len(output_file_name_restored)):
     soundfile.write(output_file_name_restored[i], restored_array[i], sample_rate)
-    
+    #####
+    #7 TESTING NEVER FINISHED BEFORE GYM
+    #####
+
     #####
     #TESTING PURPOSES ONLY
     #####

@@ -1,0 +1,5 @@
+Window Size: 4
+Max Tree Depth: 7
+Forest Size: 100
+Random Seed: 1
+
