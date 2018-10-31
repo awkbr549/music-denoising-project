@@ -1,5 +1,3 @@
-ALL RECONSTRUCTIONS WERE BUILT FROM DIFFERENT NOISE
-
 Window Size: 4
 Max Tree Depth: 7
 Forest Size: 100
