@@ -1,0 +1,6 @@
+model_name,train_lengths,learn_time,size_disk
+solo_43-53_patch100x2_100atoms_batchsize100.sav,10,194.82,400839
+solo_40-60_patch100x2_100atoms_batchsize100.sav,20,222.61,400839
+solo_30-70_patch100x2_100atoms_batchsize100.sav,40,268.17,400839
+solo_30-70_patch100x2_100atoms_batchsize100.sav,40,40,-372.17,702.766,23.642,22.05,655.50
+solo_30-70_patch100x2_100atoms_batchsize100.sav,40,40,-370.45,701.439,23.647,22.09,655.38

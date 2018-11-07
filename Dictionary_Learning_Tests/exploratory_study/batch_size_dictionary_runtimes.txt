@@ -1,0 +1,6 @@
+model_name,batch_size,learn_time,size_disk
+solo_43-53_patch1000x2_100atoms_batchsize3.sav,3,171.10,3280841
+solo_43-53_patch1000x2_100atoms_batchsize100.sav,100,547.54,3280841
+solo_43-53_patch100x2_100atoms_batchsize3.sav,3,44.37,400839
+solo_43-53_patch100x2_100atoms_batchsize100.sav,100,193.09,400839
+solo_43-53_patch100x2_100atoms_batchsize1000.sav,1000,1559.11,400840

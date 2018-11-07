@@ -1,0 +1,1 @@
+model_name,train_lengths,test_length,denoise_time,snr_before,snr_after,sse_before,sse_after

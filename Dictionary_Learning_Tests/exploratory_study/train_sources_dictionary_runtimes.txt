@@ -1,0 +1,4 @@
+model_name,train_source,learn_time,size_disk
+solo_43-53_patch100x2_100atoms_batchsize100.sav,solo_43-53.wav,194.55,400839
+guitar_42-52_patch100x2_100atoms_batchsize100.sav,guitar_42-52.wav,148.05,400839
+piano_42-52_patch100x2_100atoms_batchsize100.sav,piano_42-52.wav,257.25,400839

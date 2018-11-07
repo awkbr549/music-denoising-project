@@ -1,0 +1,4 @@
+model_name,train_type,learn_time,size_disk
+solo_43-53_patch100x2_100atoms_batchsize100.sav,clean,196.29,400839
+solo_43-53_white_patch100x2_100atoms_batchsize100.sav,white,197.09,400839
+solo_43-53_whitecrackle_patch100x2_100atoms_batchsize100.sav,white_crackle,197.16,400839
